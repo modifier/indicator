@@ -12,7 +12,10 @@ Indicator.prototype = {
 		+ Math[foo_name]((t ? t * Math.PI * 2 : 0) + this.angle_offset * index) * this.outer_radius;
 	},
 	_appendIndicator: function () {
-		this._indicator = this._wrapper.append("svg");
+		this._indicator = this._wrapper.append("svg")
+			.attr("x", this._wrapper.attr("width") / 2)
+			.attr("y", this._wrapper.attr("height") / 2);
+
 		var particles_count = 5;
 		this._particles = [];
 		for (var i = 0; i < particles_count; i++) {
@@ -51,15 +54,24 @@ Indicator.prototype = {
 		}
 	},
 	_stopAnimation: function () {
-
+		for (var i = 0; i < this._particles.length; i++) {
+			this._particles[i].transition().duration(0);
+		}
 	},
 	show: function () {
+		this._wrapper.selectAll("*").attr("display", "none");
 		if (!this._indicator) {
 			this._appendIndicator();
 		}
 		this._startAnimation();
 	},
 	hide: function () {
+		this._wrapper.selectAll("*").attr("display", "inline")
+		if (!this._indicator) {
+			return;
+		}
 
+		this._stopAnimation();
+		this._indicator.attr("display", "none");
 	}
 };
