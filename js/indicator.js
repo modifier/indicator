@@ -3,56 +3,61 @@ var Indicator = function (wrapper) {
 };
 
 Indicator.prototype = {
+	particle_radius: 3,
+	outer_radius: 30,
+	angle_offset: Math.PI / 12,
+	_getParticlePosition: function (coordinate, index, t) {
+		var foo_name = coordinate == "x" ? "cos" : "sin";
+		return this.particle_radius + this.outer_radius
+		+ Math[foo_name]((t ? t * Math.PI * 2 : 0) + this.angle_offset * index) * this.outer_radius;
+	},
 	_appendIndicator: function () {
 		this._indicator = this._wrapper.append("svg");
-
-		var outer_radius = 30;
-		var cycle_duration = 2000;
 		var particles_count = 5;
-		var particle_radius = 3;
-		var angle_offset = Math.PI / 12;
-
-		var position_foo = function (foo_name, index, t) {
-			return particle_radius + outer_radius
-			+ Math[foo_name]((t ? t * Math.PI * 2 : 0) + angle_offset * index) * outer_radius;
-		};
-
-		var particles = [];
+		this._particles = [];
 		for (var i = 0; i < particles_count; i++) {
 			var new_particle = this._indicator.insert("circle")
-				.attr("cx", position_foo("cos", i))
-				.attr("cy", position_foo("sin", i))
-				.attr("r", particle_radius)
+				.attr("cx", this._getParticlePosition("x", i))
+				.attr("cy", this._getParticlePosition("y", i))
+				.attr("r", this.particle_radius)
 				.attr("fill", "#0a5089");
-			particles.push(new_particle);
+			this._particles.push(new_particle);
 		}
-
-		for (var i = 0; i < particles_count; i++) {
-			(function(i) {
+	},
+	_startAnimation: function () {
+		var cycle_duration = 2000;
+		var that = this;
+		for (var i = 0; i < this._particles.length; i++) {
+			(function(particle, i) {
+				// Start animation with delay
 				setTimeout(function () {
 					(function repeating () {
-						particles[i].transition()
+						particle.transition()
 							.duration(cycle_duration)
 							.attrTween("cx", function () {
 								return function (t) {
-									return position_foo("cos", i, t);
+									return that._getParticlePosition("x", i, t);
 								};
 							})
 							.attrTween("cy", function () {
 								return function (t) {
-									return position_foo("sin", i, t);
+									return that._getParticlePosition("y", i, t);
 								};
 							})
 							.each("end", repeating);
 					})();
 				}, cycle_duration / 20 * i);
-			})(i);
+			})(this._particles[i], i);
 		}
+	},
+	_stopAnimation: function () {
+
 	},
 	show: function () {
 		if (!this._indicator) {
 			this._appendIndicator();
 		}
+		this._startAnimation();
 	},
 	hide: function () {
 
